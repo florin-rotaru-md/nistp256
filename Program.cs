@@ -21,7 +21,8 @@ namespace nistp256
         private ECPrivateKeyParameters bouncyCastlePrivateKey;
         private ECPublicKeyParameters bouncyCastlePublicKey;
 
-        [Params("nistP256", "nistP384", "nistP521")]
+        //[Params("nistP256", "nistP384", "nistP521")]
+        [Params("nistP256")]
         public string CurveName;
 
         [GlobalSetup]
@@ -39,7 +40,13 @@ namespace nistp256
             });
 
             // BouncyCastle setup
-            var curve = SecNamedCurves.GetByName(CurveName);
+            var curve = CurveName switch
+            {
+                "nistP256" => SecNamedCurves.GetByName("secp256r1"),
+                "nistP384" => SecNamedCurves.GetByName("secp384r1"),
+                "nistP521" => SecNamedCurves.GetByName("secp521r1"),
+                _ => throw new ArgumentException("Invalid curve name")
+            };
             var domain = new ECDomainParameters(curve);
             var generator = new ECKeyPairGenerator();
             var keyGenParams = new ECKeyGenerationParameters(domain, new SecureRandom());
@@ -88,6 +95,15 @@ namespace nistp256
 
     class Program
     {
-        static void Main() => BenchmarkRunner.Run<ECDSABenchmark>();
+        static void Main()
+        {
+            //var benchmark = new ECDSABenchmark
+            //{
+            //    CurveName = "nistP256"
+            //};
+            //benchmark.Setup();
+
+            BenchmarkRunner.Run<ECDSABenchmark>();
+        }
     }
 }
